@@ -1,0 +1,144 @@
+name: Build and Deploy FormFlow
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  DOCKERHUB_USER: jioke1
+  FRONTEND_IMAGE: formflow-frontend
+  BACKEND_IMAGE: formflow-backend
+
+jobs:
+  deploy:
+    name: Build, Push and Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+
+      #################################################
+      # Checkout Repository
+      #################################################
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      #################################################
+      # Generate Image Tag
+      #################################################
+      - name: Generate Image Tag
+        run: echo "TAG=${GITHUB_SHA::7}" >> $GITHUB_ENV
+
+      #################################################
+      # Login to Docker Hub
+      #################################################
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      #################################################
+      # Build Frontend
+      #################################################
+      - name: Build Frontend Image
+        run: |
+          docker build \
+            --build-arg REACT_APP_API_BASE_URL=${{ secrets.REACT_APP_API_BASE_URL }} \
+            --build-arg APP_VERSION=$TAG \
+            -t $DOCKERHUB_USER/$FRONTEND_IMAGE:$TAG \
+            -t $DOCKERHUB_USER/$FRONTEND_IMAGE:latest \
+            ./frontend
+
+      #################################################
+      # Build Backend
+      #################################################
+      - name: Build Backend Image
+        run: |
+          docker build \
+            --build-arg APP_VERSION=$TAG \
+            -t $DOCKERHUB_USER/$BACKEND_IMAGE:$TAG \
+            -t $DOCKERHUB_USER/$BACKEND_IMAGE:latest \
+            ./backend
+
+      #################################################
+      # Push Images
+      #################################################
+      - name: Push Frontend Image
+        run: |
+          docker push $DOCKERHUB_USER/$FRONTEND_IMAGE:$TAG
+          docker push $DOCKERHUB_USER/$FRONTEND_IMAGE:latest
+
+      - name: Push Backend Image
+        run: |
+          docker push $DOCKERHUB_USER/$BACKEND_IMAGE:$TAG
+          docker push $DOCKERHUB_USER/$BACKEND_IMAGE:latest
+
+      #################################################
+      # Configure SSH
+      #################################################
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+
+          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+
+      #################################################
+      # Deploy to EC2
+      #################################################
+      - name: Deploy to EC2
+        run: |
+          ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
+
+          mkdir -p /opt/capstone
+
+          if [ ! -d /opt/capstone/app/.git ]; then
+            rm -rf /opt/capstone/app
+            git clone https://github.com/${{ github.repository }}.git /opt/capstone/app
+          fi
+
+          cd /opt/capstone/app
+
+          git fetch origin
+          git reset --hard origin/main
+
+          echo "$TAG" > /opt/capstone/current_version
+
+          cat > .env <<EOT
+          DOCKERHUB_USER=jioke1
+          TAG=$TAG
+          MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }}
+          MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
+          MYSQL_USER=${{ secrets.MYSQL_USER }}
+          MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}
+          MYSQL_HOST=${{ secrets.MYSQL_HOST }}
+          REACT_APP_API_BASE_URL=${{ secrets.REACT_APP_API_BASE_URL }}
+          EOT
+
+          docker compose pull
+
+          docker compose up -d --remove-orphans
+
+          docker compose ps
+
+          docker images | grep formflow
+
+          docker image prune -f
+
+          EOF
+
+      #################################################
+      # Summary
+      #################################################
+      - name: Deployment Summary
+        run: |
+          echo "======================================"
+          echo "Deployment completed successfully"
+          echo "======================================"
+          echo ""
+          echo "Version: $TAG"
+          echo ""
+          echo "$DOCKERHUB_USER/$FRONTEND_IMAGE:$TAG"
+          echo "$DOCKERHUB_USER/$BACKEND_IMAGE:$TAG"

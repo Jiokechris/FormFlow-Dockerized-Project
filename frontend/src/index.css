@@ -1,0 +1,153 @@
+/* Design tokens — shared across Home, Student, Teacher */
+:root {
+  /* Palette */
+  --ink: #171a2b;
+  --ink-soft: #454a63;
+  --paper: #f6f4ee;
+  --panel: #ffffff;
+  --panel-tint: rgba(255, 255, 255, 0.14);
+
+  --navy: #1c2340;
+  --blue: #2f6fed;
+  --blue-deep: #1d4fc4;
+  --gold: #f0b84b;
+  --coral: #ec6a4b;
+  --coral-deep: #d8492b;
+  --sage: #4f9d7c;
+  --danger: #d94f4f;
+  --danger-deep: #b93a3a;
+
+  /* Type */
+  --font-display: "Fraunces", Georgia, "Times New Roman", serif;
+  --font-body: "Inter", "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Helvetica Neue", Arial, sans-serif;
+
+  /* Shape */
+  --radius-lg: 20px;
+  --radius-md: 12px;
+  --radius-sm: 8px;
+  --shadow-panel: 0 10px 30px rgba(23, 26, 43, 0.25);
+}
+
+/* Global Reset */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* Root */
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+}
+
+/* Body */
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.6;
+
+  color: var(--ink);
+  background-color: var(--paper);
+
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  overflow-x: hidden;
+}
+
+h1, h2, h3 {
+  font-family: var(--font-display);
+  letter-spacing: 0.01em;
+}
+
+/* Shared eyebrow-badge used for section labels across pages */
+.eyebrow-badge {
+  display: inline-block;
+  padding: 10px 22px;
+  margin-bottom: 24px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, var(--gold), var(--blue));
+  color: var(--navy);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.15rem;
+  box-shadow: 0 6px 15px rgba(23, 26, 43, 0.2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Root React container */
+#root {
+  min-height: 100vh;
+}
+
+/* Images */
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Links */
+a {
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.25s ease;
+}
+
+/* Buttons */
+button {
+  font: inherit;
+  cursor: pointer;
+}
+
+/* Inputs */
+input,
+select,
+textarea,
+button {
+  font-family: inherit;
+}
+
+/* Tables */
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+/* Lists */
+ul,
+ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Code blocks */
+code {
+  font-family: Consolas, Monaco, "Courier New", monospace;
+}
+
+.subtitle {
+  max-width: 650px;
+  margin: 0 auto 40px;
+
+  font-size: 1.2rem;
+  line-height: 1.7;
+
+  color: rgba(255, 255, 255, 0.9);
+}

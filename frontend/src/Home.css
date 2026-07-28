@@ -1,0 +1,136 @@
+/* Home.css */
+
+.home-container {
+  position: relative;
+  min-height: 100vh;
+  width: 100%;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  background: linear-gradient(
+      rgba(23, 26, 43, 0.55),
+      rgba(28, 35, 64, 0.7)
+    ),
+    url("./assets/Student.jpg");
+
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+
+  padding: 30px;
+  box-sizing: border-box;
+}
+
+.content {
+  text-align: center;
+  color: #fff;
+  max-width: 900px;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 5vw, 3.6rem);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  line-height: 1.15;
+
+  padding: 22px 40px;
+  margin-bottom: 28px;
+
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 18px;
+
+  background: rgba(23, 26, 43, 0.35);
+  backdrop-filter: blur(6px);
+
+  animation: fadeInDown 0.8s ease;
+}
+
+.subtitle {
+  font-family: var(--font-body);
+}
+
+.button-container {
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+  flex-wrap: wrap;
+}
+
+.student-button,
+.teacher-button {
+  display: inline-block;
+
+  padding: 18px 45px;
+
+  min-width: 200px;
+
+  background: linear-gradient(135deg, var(--coral), var(--coral-deep));
+
+  color: #fff;
+  text-decoration: none;
+  font-family: var(--font-body);
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+
+  border-radius: var(--radius-md);
+
+  box-shadow: 0 10px 25px rgba(23, 26, 43, 0.3);
+
+  transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+}
+
+.teacher-button {
+  background: linear-gradient(135deg, var(--blue), var(--blue-deep));
+}
+
+.student-button:hover,
+.teacher-button:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 32px rgba(23, 26, 43, 0.35);
+}
+
+.student-button:focus-visible,
+.teacher-button:focus-visible {
+  outline: 3px solid var(--gold);
+  outline-offset: 3px;
+}
+
+.student-button:active,
+.teacher-button:active {
+  transform: translateY(-1px);
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 768px) {
+
+  .button-container {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .student-button,
+  .teacher-button {
+    width: 100%;
+    max-width: 320px;
+  }
+
+  .title {
+    padding: 16px 22px;
+  }
+
+}

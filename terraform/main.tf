@@ -1,0 +1,181 @@
+#############################################################
+# Latest Ubuntu 24.04 LTS AMI
+#############################################################
+
+data "aws_ami" "ubuntu" {
+
+  most_recent = true
+
+  owners = ["099720109477"]
+
+  filter {
+    name   = "name"
+    values = ["ubuntu/images/hvm-ssd-gp3/ubuntu-noble-24.04-amd64-server-*"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+}
+
+#############################################################
+# VPC
+#############################################################
+
+resource "aws_vpc" "formflow" {
+
+  cidr_block = var.vpc_cidr
+
+  enable_dns_support = true
+
+  enable_dns_hostnames = true
+
+  tags = merge(
+    local.common_tags,
+    {
+      Name = "${var.project_name}-vpc"
+    }
+  )
+}
+
+#############################################################
+# Internet Gateway
+#############################################################
+
+resource "aws_internet_gateway" "formflow" {
+
+  vpc_id = aws_vpc.formflow.id
+
+  tags = merge(
+    local.common_tags,
+    {
+      Name = "${var.project_name}-igw"
+    }
+  )
+}
+
+#############################################################
+# Public Subnet
+#############################################################
+
+resource "aws_subnet" "public" {
+
+  vpc_id = aws_vpc.formflow.id
+
+  cidr_block = var.public_subnet_1_cidr
+
+  availability_zone = var.availability_zone_1
+
+  map_public_ip_on_launch = true
+
+  tags = merge(
+    local.common_tags,
+    {
+      Name = "${var.project_name}-public-subnet"
+    }
+  )
+}
+
+#############################################################
+# Public Route Table
+#############################################################
+
+resource "aws_route_table" "public" {
+
+  vpc_id = aws_vpc.formflow.id
+
+  route {
+
+    cidr_block = "0.0.0.0/0"
+
+    gateway_id = aws_internet_gateway.formflow.id
+
+  }
+
+  tags = merge(
+    local.common_tags,
+    {
+      Name = "${var.project_name}-public-rt"
+    }
+  )
+}
+
+#############################################################
+# Route Table Association
+#############################################################
+
+resource "aws_route_table_association" "public" {
+
+  subnet_id = aws_subnet.public.id
+
+  route_table_id = aws_route_table.public.id
+
+}
+
+#############################################################
+# AWS Instance
+#############################################################
+
+resource "aws_instance" "formflow" {
+  ami           = data.aws_ami.ubuntu.id
+
+  instance_type = var.instance_type
+
+  subnet_id     = aws_subnet.public.id
+
+  key_name      = var.key_name
+
+  vpc_security_group_ids = [aws_security_group.formflow.id]
+
+  associate_public_ip_address = true
+
+  tags = merge(
+    local.common_tags,
+    {
+      Name = "${var.project_name}-ec2"
+    }
+  )
+
+  user_data = templatefile("${path.module}/user_data.sh", {
+  github_repository = var.github_repository
+})
+  
+}
+
+#############################################################
+# Security Group
+#############################################################
+resource "aws_security_group" "formflow" {
+  name        = "${var.project_name}-sg"
+  description = "Security group for EC2 instance"
+  vpc_id      = aws_vpc.formflow.id
+
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = [local.my_ip]
+  }
+
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = merge(
+    local.common_tags,
+    {
+      Name = "${var.project_name}-sg"
+    }
+  )
+}
